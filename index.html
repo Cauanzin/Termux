@@ -109,9 +109,11 @@
                     const analyzeButton = document.createElement('button');
                     analyzeButton.className = 'analyze-button';
                     analyzeButton.textContent = 'Analisar';
-                    analyzeButton.onclick = () => {
+                    
+                    // Adicionando um "listener" para o evento de clique
+                    analyzeButton.addEventListener('click', () => {
                         sendAnalysisRequest(game);
-                    };
+                    });
                     
                     gameItem.appendChild(league);
                     gameItem.appendChild(teams);
@@ -135,9 +137,12 @@
             };
             Telegram.sendData(JSON.stringify(data));
         }
-
-        Telegram.ready();
-        renderGames(); // Mude esta linha para: document.addEventListener('DOMContentLoaded', renderGames);
+        
+        // Espera a página estar completamente carregada antes de renderizar os jogos e iniciar o Web App
+        document.addEventListener('DOMContentLoaded', () => {
+            Telegram.ready();
+            renderGames();
+        });
         
         // Escuta a resposta do bot com o resultado da análise
         Telegram.onEvent('data', (data) => {
@@ -146,7 +151,6 @@
                 const teams = analysisResult.teams;
                 const analysis = analysisResult.analysis;
                 
-                // Encontra o item do jogo na lista e exibe o resultado
                 const gameItems = document.querySelectorAll('.game-item');
                 gameItems.forEach(item => {
                     if (item.querySelector('.teams').textContent === teams) {
@@ -163,11 +167,6 @@
             } catch (e) {
                 console.error("Erro ao analisar a resposta do bot: ", e);
             }
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            renderGames();
-            Telegram.ready();
         });
     </script>
 </body>

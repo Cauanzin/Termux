@@ -40,25 +40,29 @@ async def handle_web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE
     Função que lida com a mensagem de ação enviada pelo Web App.
     """
     if update.message.web_app_data:
-        data = json.loads(update.message.web_app_data.data)
-        
-        if data.get("action") == "analyze":
-            teams = data.get("teams")
-            league = data.get("league")
+        try:
+            data = json.loads(update.message.web_app_data.data)
             
-            # Aqui você executaria a análise real
-            await update.message.reply_text(f"Analisando o jogo: {teams} da {league}...")
-            
-            # Exemplo de resultado de análise
-            analysis_result = {
-                "teams": teams,
-                "analysis": "Análise de teste concluída! A IA identificou uma boa oportunidade de Over 2.5 gols com base nas estatísticas recentes."
-            }
-            
-            analysis_json = json.dumps(analysis_result)
-            
-            # Envia o resultado de volta para o Web App
-            await update.message.web_app_data.send_data(analysis_json)
+            if data.get("action") == "analyze":
+                teams = data.get("teams")
+                league = data.get("league")
+                
+                # Aqui você executaria a análise real
+                await update.message.reply_text(f"Analisando o jogo: {teams} da {league}...")
+                
+                # Exemplo de resultado de análise
+                analysis_result = {
+                    "teams": teams,
+                    "analysis": "Análise de teste concluída! A IA identificou uma boa oportunidade de Over 2.5 gols com base nas estatísticas recentes."
+                }
+                
+                analysis_json = json.dumps(analysis_result)
+                
+                # Envia o resultado de volta para o Web App
+                await update.message.web_app_data.send_data(analysis_json)
+        except json.JSONDecodeError:
+            # Caso a mensagem não seja um JSON válido (ex: "ready")
+            pass
 
 def main():
     """
