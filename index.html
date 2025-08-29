@@ -110,10 +110,10 @@
                     analyzeButton.className = 'analyze-button';
                     analyzeButton.textContent = 'Analisar';
                     
-                    // Adicionando um "listener" para o evento de clique
-                    analyzeButton.addEventListener('click', () => {
+                    // Definindo a função do clique diretamente
+                    analyzeButton.onclick = () => {
                         sendAnalysisRequest(game);
-                    });
+                    };
                     
                     gameItem.appendChild(league);
                     gameItem.appendChild(teams);
@@ -140,8 +140,8 @@
         
         // Espera a página estar completamente carregada antes de renderizar os jogos e iniciar o Web App
         document.addEventListener('DOMContentLoaded', () => {
-            Telegram.ready();
             renderGames();
+            Telegram.ready();
         });
         
         // Escuta a resposta do bot com o resultado da análise
