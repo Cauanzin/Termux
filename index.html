@@ -47,6 +47,23 @@
             font-size: 14px;
             color: #aaa;
         }
+        .analyze-button {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .analysis-result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #555;
+            border-radius: 5px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -61,46 +78,90 @@
     <script>
         const Telegram = window.Telegram.WebApp;
 
-        // Quando a página carrega, ela notifica o bot que está pronta
+        // Dados de jogos de teste (você pode substituir por uma chamada a uma API no futuro)
+        const jogos = [
+            {"league": "Campeonato Teste", "time": "20:00", "teams": "Time A x Time B"},
+            {"league": "Copa Teste", "time": "21:30", "teams": "Time C x Time D"},
+            {"league": "Liga Teste", "time": "22:00", "teams": "Time E x Time F"},
+        ];
+
+        function renderGames() {
+            const gameListDiv = document.getElementById('game-list');
+            gameListDiv.innerHTML = '';
+            
+            if (jogos.length > 0) {
+                jogos.forEach(game => {
+                    const gameItem = document.createElement('div');
+                    gameItem.className = 'game-item';
+                    
+                    const league = document.createElement('div');
+                    league.className = 'league';
+                    league.textContent = game.league;
+                    
+                    const teams = document.createElement('div');
+                    teams.className = 'teams';
+                    teams.textContent = game.teams;
+                    
+                    const time = document.createElement('div');
+                    time.className = 'time';
+                    time.textContent = `Horário: ${game.time}`;
+
+                    const analyzeButton = document.createElement('button');
+                    analyzeButton.className = 'analyze-button';
+                    analyzeButton.textContent = 'Analisar';
+                    analyzeButton.onclick = () => {
+                        sendAnalysisRequest(game);
+                    };
+                    
+                    gameItem.appendChild(league);
+                    gameItem.appendChild(teams);
+                    gameItem.appendChild(time);
+                    gameItem.appendChild(analyzeButton);
+                    
+                    gameListDiv.appendChild(gameItem);
+                });
+            } else {
+                gameListDiv.innerHTML = '<p style="text-align: center;">Nenhum jogo encontrado para análise no momento. Tente novamente mais tarde.</p>';
+            }
+        }
+
+        function sendAnalysisRequest(game) {
+            // Envia uma mensagem para o bot solicitando a análise
+            const data = {
+                action: "analyze",
+                teams: game.teams,
+                league: game.league,
+                time: game.time
+            };
+            Telegram.sendData(JSON.stringify(data));
+        }
+
         Telegram.ready();
-        Telegram.sendData("ready");
+        renderGames(); // Carrega os jogos assim que a página estiver pronta
         
-        // Recebe os dados do bot quando ele os envia
+        // Escuta a resposta do bot com o resultado da análise
         Telegram.onEvent('data', (data) => {
             try {
-                const games = JSON.parse(data);
-                const gameListDiv = document.getElementById('game-list');
-                gameListDiv.innerHTML = ''; // Limpa a mensagem de carregamento
+                const analysisResult = JSON.parse(data);
+                const teams = analysisResult.teams;
+                const analysis = analysisResult.analysis;
                 
-                if (games.length > 0) {
-                    games.forEach(game => {
-                        const gameItem = document.createElement('div');
-                        gameItem.className = 'game-item';
-                        
-                        const league = document.createElement('div');
-                        league.className = 'league';
-                        league.textContent = game.league;
-                        
-                        const teams = document.createElement('div');
-                        teams.className = 'teams';
-                        teams.textContent = game.teams;
-                        
-                        const time = document.createElement('div');
-                        time.className = 'time';
-                        time.textContent = `Horário: ${game.time}`;
-                        
-                        gameItem.appendChild(league);
-                        gameItem.appendChild(teams);
-                        gameItem.appendChild(time);
-                        
-                        gameListDiv.appendChild(gameItem);
-                    });
-                } else {
-                    gameListDiv.innerHTML = '<p style="text-align: center;">Nenhum jogo encontrado para análise no momento. Tente novamente mais tarde.</p>';
-                }
+                // Encontra o item do jogo na lista e exibe o resultado
+                const gameItems = document.querySelectorAll('.game-item');
+                gameItems.forEach(item => {
+                    if (item.querySelector('.teams').textContent === teams) {
+                        let resultDiv = item.querySelector('.analysis-result');
+                        if (!resultDiv) {
+                            resultDiv = document.createElement('div');
+                            resultDiv.className = 'analysis-result';
+                            item.appendChild(resultDiv);
+                        }
+                        resultDiv.textContent = analysis;
+                    }
+                });
+
             } catch (e) {
-                console.error("Erro ao analisar os dados: ", e);
-                document.getElementById('game-list').innerHTML = '<p style="text-align: center;">Erro ao carregar os dados dos jogos.</p>';
+                console.error("Erro ao analisar a resposta do bot: ", e);
             }
         });
     </script>

@@ -37,33 +37,36 @@ CAMPEONATOS_PERMITIDOS = [
 
 async def handle_web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    Função que lida com a mensagem enviada pelo Web App.
+    Função que lida com a mensagem de ação enviada pelo Web App.
     """
-    if update.message.web_app_data and update.message.web_app_data.data == "ready":
-        # Quando o Web App envia "ready", o bot envia os dados
-        jogos_teste = [
-            {"league": "Campeonato Teste", "time": "20:00", "teams": "Time A x Time B"},
-            {"league": "Copa Teste", "time": "21:30", "teams": "Time C x Time D"},
-            {"league": "Liga Teste", "time": "22:00", "teams": "Time E x Time F"},
-        ]
+    if update.message.web_app_data:
+        data = json.loads(update.message.web_app_data.data)
         
-        jogos_json = json.dumps(jogos_teste)
-        
-        # Envia os dados de volta para o Web App
-        await update.message.reply_text("Buscando jogos...")
-        await update.message.web_app_data.send_data(jogos_json)
+        if data.get("action") == "analyze":
+            teams = data.get("teams")
+            league = data.get("league")
+            
+            # Aqui você executaria a análise real
+            await update.message.reply_text(f"Analisando o jogo: {teams} da {league}...")
+            
+            # Exemplo de resultado de análise
+            analysis_result = {
+                "teams": teams,
+                "analysis": "Análise de teste concluída! A IA identificou uma boa oportunidade de Over 2.5 gols com base nas estatísticas recentes."
+            }
+            
+            analysis_json = json.dumps(analysis_result)
+            
+            # Envia o resultado de volta para o Web App
+            await update.message.web_app_data.send_data(analysis_json)
 
 def main():
     """
     Função principal para rodar o bot.
     """
     application = ApplicationBuilder().token(TOKEN).build()
-
-    # O bot apenas espera pela mensagem "ready" do Web App
     web_app_handler = MessageHandler(filters.StatusUpdate.WEB_APP_DATA, handle_web_app_data)
-    
     application.add_handler(web_app_handler)
-
     application.run_polling()
     
 if __name__ == '__main__':
