@@ -1,72 +1,49 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatBet AI</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f2f5;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-            text-align: center;
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+    // Função para obter o parâmetro 'data' da URL
+    function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }
+
+    // Função para criar a lista de jogos dinamicamente
+    function displayGames() {
+        const gamesListElement = document.getElementById('game-list');
+        const gameDataString = getQueryParam('data');
+
+        if (!gameDataString) {
+            gamesListElement.innerHTML = '<p>Nenhum jogo disponível hoje.</p>';
+            return;
         }
-        h1 {
-            color: #1a73e8;
-            margin-bottom: 20px;
+
+        try {
+            // Decodifica a string da URL e a converte de volta para um objeto JSON
+            const games = JSON.parse(decodeURIComponent(gameDataString));
+
+            games.forEach(game => {
+                const li = document.createElement('li');
+                li.className = 'game-item';
+
+                const gameInfo = document.createElement('div');
+                gameInfo.className = 'game-info';
+                gameInfo.innerHTML = `
+                    <h3>${game.time} - ${game.teams}</h3>
+                    <p class="league">${game.league}</p>
+                `;
+
+                const analyzeButton = document.createElement('button');
+                analyzeButton.className = 'analyze-button';
+                analyzeButton.textContent = 'Analisar';
+
+                li.appendChild(gameInfo);
+                li.appendChild(analyzeButton);
+                gamesListElement.appendChild(li);
+            });
+        } catch (e) {
+            gamesListElement.innerHTML = '<p>Erro ao carregar os dados dos jogos.</p>';
         }
-        .container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .game-list {
-            list-style: none;
-            padding: 0;
-        }
-        .game-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-        }
-        .game-item:last-child {
-            border-bottom: none;
-        }
-        .game-info {
-            text-align: left;
-        }
-        .game-info .league {
-            font-size: 0.9em;
-            color: #666;
-        }
-        .analyze-button {
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .analyze-button:active {
-            background-color: #0d47a1;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Principais Jogos</h1>
-        <ul id="game-list" class="game-list">
-            </ul>
-    </div>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script>
-        // O código do JavaScript para interagir com o bot virá aqui
-    </script>
-</body>
-</html>
+    }
+
+    // Chama a função para exibir os jogos quando a página é carregada
+    displayGames();
+</script>
