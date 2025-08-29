@@ -137,7 +137,7 @@
         }
 
         Telegram.ready();
-        renderGames(); // Carrega os jogos assim que a página estiver pronta
+        renderGames(); // Mude esta linha para: document.addEventListener('DOMContentLoaded', renderGames);
         
         // Escuta a resposta do bot com o resultado da análise
         Telegram.onEvent('data', (data) => {
@@ -163,6 +163,11 @@
             } catch (e) {
                 console.error("Erro ao analisar a resposta do bot: ", e);
             }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderGames();
+            Telegram.ready();
         });
     </script>
 </body>
