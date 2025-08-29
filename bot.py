@@ -2,6 +2,7 @@ import logging
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
 import json
+import asyncio
 
 # Importa as funções de raspagem que já temos
 from ia import raspar_jogos_do_dia
@@ -42,8 +43,22 @@ async def handle_web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE
     if update.message.web_app_data:
         try:
             data = json.loads(update.message.web_app_data.data)
-            
-            if data.get("action") == "analyze":
+
+            if data.get("action") == "get_games":
+                # Ação para obter os jogos reais
+                await update.message.reply_text("Buscando jogos reais...")
+                
+                # Executa a raspagem de dados
+                jogos_hoje = await raspar_jogos_do_dia(URL_HOJE, CAMPEONATOS_PERMITIDOS)
+                jogos_amanha = await raspar_jogos_do_dia(URL_AMANHA, CAMPEONATOS_PERMITIDOS)
+                jogos_completos = jogos_hoje + jogos_amanha
+
+                jogos_json = json.dumps(jogos_completos)
+                
+                # Envia a lista de jogos reais para o Web App
+                await update.message.web_app_data.send_data(jogos_json)
+
+            elif data.get("action") == "analyze":
                 teams = data.get("teams")
                 league = data.get("league")
                 
@@ -60,6 +75,7 @@ async def handle_web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE
                 
                 # Envia o resultado de volta para o Web App
                 await update.message.web_app_data.send_data(analysis_json)
+
         except json.JSONDecodeError:
             # Caso a mensagem não seja um JSON válido (ex: "ready")
             pass

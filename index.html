@@ -78,19 +78,12 @@
     <script>
         const Telegram = window.Telegram.WebApp;
 
-        // Dados de jogos de teste (você pode substituir por uma chamada a uma API no futuro)
-        const jogos = [
-            {"league": "Campeonato Teste", "time": "20:00", "teams": "Time A x Time B"},
-            {"league": "Copa Teste", "time": "21:30", "teams": "Time C x Time D"},
-            {"league": "Liga Teste", "time": "22:00", "teams": "Time E x Time F"},
-        ];
-
-        function renderGames() {
+        function renderGames(games) {
             const gameListDiv = document.getElementById('game-list');
             gameListDiv.innerHTML = '';
             
-            if (jogos.length > 0) {
-                jogos.forEach(game => {
+            if (games.length > 0) {
+                games.forEach(game => {
                     const gameItem = document.createElement('div');
                     gameItem.className = 'game-item';
                     
@@ -110,7 +103,6 @@
                     analyzeButton.className = 'analyze-button';
                     analyzeButton.textContent = 'Analisar';
                     
-                    // Definindo a função do clique diretamente
                     analyzeButton.onclick = () => {
                         sendAnalysisRequest(game);
                     };
@@ -137,35 +129,51 @@
             };
             Telegram.sendData(JSON.stringify(data));
         }
-        
-        // Espera a página estar completamente carregada antes de renderizar os jogos e iniciar o Web App
+
+        // Envia uma mensagem para o bot solicitando a lista de jogos reais
+        function getRealGames() {
+            const data = {
+                action: "get_games"
+            };
+            Telegram.sendData(JSON.stringify(data));
+        }
+
+        // Espera a página estar completamente carregada
         document.addEventListener('DOMContentLoaded', () => {
-            renderGames();
             Telegram.ready();
+            getRealGames(); // Pede a lista de jogos reais ao bot
         });
         
-        // Escuta a resposta do bot com o resultado da análise
+        // Escuta a resposta do bot com a lista de jogos ou o resultado da análise
         Telegram.onEvent('data', (data) => {
             try {
-                const analysisResult = JSON.parse(data);
-                const teams = analysisResult.teams;
-                const analysis = analysisResult.analysis;
+                const response = JSON.parse(data);
                 
-                const gameItems = document.querySelectorAll('.game-item');
-                gameItems.forEach(item => {
-                    if (item.querySelector('.teams').textContent === teams) {
-                        let resultDiv = item.querySelector('.analysis-result');
-                        if (!resultDiv) {
-                            resultDiv = document.createElement('div');
-                            resultDiv.className = 'analysis-result';
-                            item.appendChild(resultDiv);
+                // Se a resposta for uma lista de jogos, renderiza na tela
+                if (Array.isArray(response)) {
+                    renderGames(response);
+                } else if (response.analysis) { // Se for um resultado de análise
+                    const teams = response.teams;
+                    const analysis = response.analysis;
+                    
+                    const gameItems = document.querySelectorAll('.game-item');
+                    gameItems.forEach(item => {
+                        if (item.querySelector('.teams').textContent === teams) {
+                            let resultDiv = item.querySelector('.analysis-result');
+                            if (!resultDiv) {
+                                resultDiv = document.createElement('div');
+                                resultDiv.className = 'analysis-result';
+                                item.appendChild(resultDiv);
+                            }
+                            resultDiv.textContent = analysis;
                         }
-                        resultDiv.textContent = analysis;
-                    }
-                });
+                    });
+                }
 
             } catch (e) {
                 console.error("Erro ao analisar a resposta do bot: ", e);
+                // No caso de erro, limpa a tela e mostra uma mensagem
+                document.getElementById('game-list').innerHTML = '<p style="text-align: center;">Erro ao carregar os dados dos jogos. Tente novamente.</p>';
             }
         });
     </script>
