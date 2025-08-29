@@ -1,49 +1,107 @@
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script>
-    // Função para obter o parâmetro 'data' da URL
-    function getQueryParam(param) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(param);
-    }
-
-    // Função para criar a lista de jogos dinamicamente
-    function displayGames() {
-        const gamesListElement = document.getElementById('game-list');
-        const gameDataString = getQueryParam('data');
-
-        if (!gameDataString) {
-            gamesListElement.innerHTML = '<p>Nenhum jogo disponível hoje.</p>';
-            return;
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Jogos</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #212121;
+            color: white;
+            padding: 10px;
+            margin: 0;
         }
-
-        try {
-            // Decodifica a string da URL e a converte de volta para um objeto JSON
-            const games = JSON.parse(decodeURIComponent(gameDataString));
-
-            games.forEach(game => {
-                const li = document.createElement('li');
-                li.className = 'game-item';
-
-                const gameInfo = document.createElement('div');
-                gameInfo.className = 'game-info';
-                gameInfo.innerHTML = `
-                    <h3>${game.time} - ${game.teams}</h3>
-                    <p class="league">${game.league}</p>
-                `;
-
-                const analyzeButton = document.createElement('button');
-                analyzeButton.className = 'analyze-button';
-                analyzeButton.textContent = 'Analisar';
-
-                li.appendChild(gameInfo);
-                li.appendChild(analyzeButton);
-                gamesListElement.appendChild(li);
-            });
-        } catch (e) {
-            gamesListElement.innerHTML = '<p>Erro ao carregar os dados dos jogos.</p>';
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
         }
-    }
+        .header h1 {
+            color: #4CAF50;
+            font-size: 24px;
+        }
+        .game-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .game-item {
+            background-color: #333;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .game-item .league {
+            font-size: 14px;
+            color: #ccc;
+        }
+        .game-item .teams {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .game-item .time {
+            font-size: 14px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Análise de Jogos</h1>
+    </div>
 
-    // Chama a função para exibir os jogos quando a página é carregada
-    displayGames();
-</script>
+    <div class="game-list" id="game-list">
+        </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const dataParam = params.get('data');
+
+            if (dataParam) {
+                try {
+                    const decodedData = decodeURIComponent(dataParam);
+                    const games = JSON.parse(decodedData);
+                    
+                    const gameListDiv = document.getElementById('game-list');
+                    
+                    if (games.length > 0) {
+                        games.forEach(game => {
+                            const gameItem = document.createElement('div');
+                            gameItem.className = 'game-item';
+                            
+                            const league = document.createElement('div');
+                            league.className = 'league';
+                            league.textContent = game.league;
+                            
+                            const teams = document.createElement('div');
+                            teams.className = 'teams';
+                            teams.textContent = game.teams;
+                            
+                            const time = document.createElement('div');
+                            time.className = 'time';
+                            time.textContent = `Horário: ${game.time}`;
+                            
+                            gameItem.appendChild(league);
+                            gameItem.appendChild(teams);
+                            gameItem.appendChild(time);
+                            
+                            gameListDiv.appendChild(gameItem);
+                        });
+                    } else {
+                        gameListDiv.innerHTML = '<p style="text-align: center;">Nenhum jogo encontrado para análise no momento. Tente novamente mais tarde.</p>';
+                    }
+                } catch (e) {
+                    console.error("Erro ao decodificar ou analisar os dados: ", e);
+                    document.getElementById('game-list').innerHTML = '<p style="text-align: center;">Erro ao carregar os dados dos jogos.</p>';
+                }
+            } else {
+                document.getElementById('game-list').innerHTML = '<p style="text-align: center;">Nenhum dado de jogo recebido.</p>';
+            }
+        });
+    </script>
+</body>
+</html>

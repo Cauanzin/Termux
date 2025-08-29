@@ -1,6 +1,6 @@
 import logging
 from telegram import Update, WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler
 import urllib.parse
 import json
 
@@ -45,18 +45,21 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     await update.message.reply_text("Buscando jogos...")
     
-    # 1. Obter a lista de jogos da função que já temos
-    jogos_hoje = raspar_jogos_do_dia(URL_HOJE, CAMPEONATOS_PERMITIDOS)
+    # 1. Lista de jogos de teste - VAI IGNORAR O RASPADOR
+    jogos_teste = [
+        {"league": "Campeonato Teste", "time": "20:00", "teams": "Time A x Time B"},
+        {"league": "Copa Teste", "time": "21:30", "teams": "Time C x Time D"},
+        {"league": "Liga Teste", "time": "22:00", "teams": "Time E x Time F"},
+    ]
     
-    # 2. Converter a lista de jogos para uma string para passar na URL
-    # O Telegram tem um limite de 2048 caracteres na URL, vamos compactar os dados
-    jogos_json = json.dumps(jogos_hoje)
+    # 2. Converte a lista de jogos para uma string para passar na URL
+    jogos_json = json.dumps(jogos_teste)
     jogos_str = urllib.parse.quote_plus(jogos_json)
 
-    # 3. Criar a URL do Web App com os dados dos jogos como parâmetro
+    # 3. Cria a URL do Web App com os dados dos jogos como parâmetro
     web_app_url_com_dados = f"{WEB_APP_URL}?data={jogos_str}"
 
-    # 4. Criar e enviar o botão do Web App
+    # 4. Cria e envia o botão do Web App
     keyboard = [[InlineKeyboardButton("Analisar Jogos", web_app=WebAppInfo(url=web_app_url_com_dados))]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -82,3 +85,4 @@ def main():
     
 if __name__ == '__main__':
     main()
+
