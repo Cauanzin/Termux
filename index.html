@@ -1,9 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Análise de Jogos</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
             font-family: sans-serif;
@@ -54,52 +56,52 @@
     </div>
 
     <div class="game-list" id="game-list">
-        </div>
+        <p style="text-align: center;">Carregando jogos...</p>
+    </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const params = new URLSearchParams(window.location.search);
-            const dataParam = params.get('data');
+        const Telegram = window.Telegram.WebApp;
 
-            if (dataParam) {
-                try {
-                    const decodedData = decodeURIComponent(dataParam);
-                    const games = JSON.parse(decodedData);
-                    
-                    const gameListDiv = document.getElementById('game-list');
-                    
-                    if (games.length > 0) {
-                        games.forEach(game => {
-                            const gameItem = document.createElement('div');
-                            gameItem.className = 'game-item';
-                            
-                            const league = document.createElement('div');
-                            league.className = 'league';
-                            league.textContent = game.league;
-                            
-                            const teams = document.createElement('div');
-                            teams.className = 'teams';
-                            teams.textContent = game.teams;
-                            
-                            const time = document.createElement('div');
-                            time.className = 'time';
-                            time.textContent = `Horário: ${game.time}`;
-                            
-                            gameItem.appendChild(league);
-                            gameItem.appendChild(teams);
-                            gameItem.appendChild(time);
-                            
-                            gameListDiv.appendChild(gameItem);
-                        });
-                    } else {
-                        gameListDiv.innerHTML = '<p style="text-align: center;">Nenhum jogo encontrado para análise no momento. Tente novamente mais tarde.</p>';
-                    }
-                } catch (e) {
-                    console.error("Erro ao decodificar ou analisar os dados: ", e);
-                    document.getElementById('game-list').innerHTML = '<p style="text-align: center;">Erro ao carregar os dados dos jogos.</p>';
+        // Quando a página carrega, ela notifica o bot que está pronta
+        Telegram.ready();
+        Telegram.sendData("ready");
+        
+        // Recebe os dados do bot quando ele os envia
+        Telegram.onEvent('data', (data) => {
+            try {
+                const games = JSON.parse(data);
+                const gameListDiv = document.getElementById('game-list');
+                gameListDiv.innerHTML = ''; // Limpa a mensagem de carregamento
+                
+                if (games.length > 0) {
+                    games.forEach(game => {
+                        const gameItem = document.createElement('div');
+                        gameItem.className = 'game-item';
+                        
+                        const league = document.createElement('div');
+                        league.className = 'league';
+                        league.textContent = game.league;
+                        
+                        const teams = document.createElement('div');
+                        teams.className = 'teams';
+                        teams.textContent = game.teams;
+                        
+                        const time = document.createElement('div');
+                        time.className = 'time';
+                        time.textContent = `Horário: ${game.time}`;
+                        
+                        gameItem.appendChild(league);
+                        gameItem.appendChild(teams);
+                        gameItem.appendChild(time);
+                        
+                        gameListDiv.appendChild(gameItem);
+                    });
+                } else {
+                    gameListDiv.innerHTML = '<p style="text-align: center;">Nenhum jogo encontrado para análise no momento. Tente novamente mais tarde.</p>';
                 }
-            } else {
-                document.getElementById('game-list').innerHTML = '<p style="text-align: center;">Nenhum dado de jogo recebido.</p>';
+            } catch (e) {
+                console.error("Erro ao analisar os dados: ", e);
+                document.getElementById('game-list').innerHTML = '<p style="text-align: center;">Erro ao carregar os dados dos jogos.</p>';
             }
         });
     </script>

@@ -1,6 +1,6 @@
 import logging
-from telegram import Update, WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler
+from telegram import Update, WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler, MessageHandler, filters
 import urllib.parse
 import json
 
@@ -43,27 +43,25 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Função que responde ao comando /start com um botão que abre o Web App.
     """
-    await update.message.reply_text("Buscando jogos...")
-    
-    # 1. Lista de jogos de teste - VAI IGNORAR O RASPADOR
-    jogos_teste = [
-        {"league": "Campeonato Teste", "time": "20:00", "teams": "Time A x Time B"},
-        {"league": "Copa Teste", "time": "21:30", "teams": "Time C x Time D"},
-        {"league": "Liga Teste", "time": "22:00", "teams": "Time E x Time F"},
-    ]
-    
-    # 2. Converte a lista de jogos para uma string para passar na URL
-    jogos_json = json.dumps(jogos_teste)
-    jogos_str = urllib.parse.quote_plus(jogos_json)
-
-    # 3. Cria a URL do Web App com os dados dos jogos como parâmetro
-    web_app_url_com_dados = f"{WEB_APP_URL}?data={jogos_str}"
-
-    # 4. Cria e envia o botão do Web App
-    keyboard = [[InlineKeyboardButton("Analisar Jogos", web_app=WebAppInfo(url=web_app_url_com_dados))]]
+    keyboard = [[KeyboardButton("Analisar Jogos", web_app=WebAppInfo(url=WEB_APP_URL))]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text("Clique no botão abaixo para abrir a nossa ferramenta de análise de jogos.", reply_markup=reply_markup)
+
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message.web_app_data:
+        # Quando o Web App é aberto, ele envia a mensagem abaixo
+        if update.message.web_app_data.data == "ready":
+            # Obtém a lista de jogos de teste
+            jogos_teste = [
+                {"league": "Campeonato Teste", "time": "20:00", "teams": "Time A x Time B"},
+                {"league": "Copa Teste", "time": "21:30", "teams": "Time C x Time D"},
+                {"league": "Liga Teste", "time": "22:00", "teams": "Time E x Time F"},
+            ]
+            
+            jogos_json = json.dumps(jogos_teste)
+            await update.message.reply_text("Buscando jogos...")
+            await update.message.web_app_data.send_data(jogos_json)
 
 # A função analisar_callback será removida/modificada no futuro
 async def analisar_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -77,9 +75,11 @@ def main():
 
     start_handler = CommandHandler('start', start)
     analisar_handler = CallbackQueryHandler(analisar_callback, pattern=r'^analisar_jogo:')
+    message_handler = MessageHandler(filters.ALL, handle_message)
     
     application.add_handler(start_handler)
     application.add_handler(analisar_handler)
+    application.add_handler(message_handler)
 
     application.run_polling()
     
